@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import FormValidator from "../../Utils/FormValidator";
-import PopUp from "../../Utils/PopUp";
+import { Grid, TextField, Button } from "@material-ui/core";
+import Toast from "../Toast/Toast";
 
 export default function Formulario({ escutaSubmit }) {
   const formValidator = new FormValidator([
@@ -8,41 +9,56 @@ export default function Formulario({ escutaSubmit }) {
       campo: "nome",
       metodo: "isEmpty",
       validoQuando: false,
-      mensagem: "Entre com um nome",
+      mensagem: {
+        open: false,
+        tipo: "success",
+        texto: "Entre com um nome"
+      }
     },
     {
       campo: "livro",
       metodo: "isEmpty",
       validoQuando: false,
-      mensagem: "Entre com um livro",
+      mensagem: {
+        open: false,
+        tipo: "success",
+        texto: "Entre com um livro"
+      }
     },
     {
       campo: "preco",
       metodo: "isInt",
       args: [{ min: 0, max: 99999 }],
       validoQuando: true,
-      mensagem: "Entre com um valor numérico",
-    },
+      mensagem: {
+        open: false,
+        tipo: "success",
+        texto: "Entre com um valor numérico"
+      }
+    }
   ]);
 
   const estadoInicial = {
     nome: "",
     livro: "",
     preco: "",
-    validacao: formValidator.valido(),
+    mensagem: {
+      open: false
+    },
+    validacao: formValidator.valido()
   };
 
   const [formulario, setFormulario] = useState(estadoInicial);
 
-  const escutaInput = (event) => {
+  const escutaInput = event => {
     const { name, value } = event.target;
     setFormulario({
       ...formulario,
-      [name]: value,
+      [name]: value
     });
   };
 
-  const { nome, livro, preco } = formulario;
+  const { open, nome, livro, preco } = formulario;
 
   const submitFormulario = () => {
     const validacao = formValidator.valida(formulario);
@@ -52,65 +68,78 @@ export default function Formulario({ escutaSubmit }) {
     } else {
       const { nome, livro, preco } = validacao;
       const campos = [nome, livro, preco];
-      const camposInvalidos = campos.filter((elem) => elem.isInvalid);
-      camposInvalidos.forEach((campo) => {
-        PopUp.exibeMensagem("error", campo.message);
+      const camposInvalidos = campos.filter(elem => elem.isInvalid);
+      
+      const erros = camposInvalidos.reduce(
+        (textos, campo) => textos + campo.message.texto + ". ",
+        ""
+      );
+      setFormulario({
+        ...formulario,
+        mensagem: {
+          open: true,
+          texto: erros,
+          tipo: "error"
+        }
       });
     }
   };
 
   return (
-    <form>
-      <div className="row">
-        <div className="input-field col s4">
-          <label className="input-field" htmlFor="nome">
-            Nome
-          </label>
-          <input
-            className="validate"
-            id="nome"
-            type="text"
-            name="nome"
-            value={nome}
-            onChange={escutaInput}
-          />
-        </div>
-        <div className="input-field col s4">
-          <label className="input-field" htmlFor="livro">
-            Livro
-          </label>
-          <input
-            className="validate"
-            id="livro"
-            type="text"
-            name="livro"
-            value={livro}
-            onChange={escutaInput}
-          />
-        </div>
-        <div className="input-field col s4">
-          <label className="input-field" htmlFor="preco">
-            Preço
-          </label>
-          <input
-            className="validate"
-            id="preco"
-            type="text"
-            name="preco"
-            value={preco}
-            onChange={escutaInput}
-          />
-        </div>
-        <div className="col s4">
-          <button
-            onClick={submitFormulario}
-            type="button"
-            className="indigo lighten-2 waves-effect waves-light btn-large"
-          >
-            Salvar
-          </button>
-        </div>
-      </div>
-    </form>
+    <>
+      <Toast
+        handleClose={() => setFormulario({ ...formulario, mensagem: {
+          open: false,
+        } })}
+        open={formulario.mensagem.open}
+        severity={formulario.mensagem.tipo}
+      >
+        {formulario.mensagem.texto}
+      </Toast>
+
+      <form>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            <TextField
+              id="nome"
+              label="Nome"
+              variant="outlined"
+              value={nome}
+              name="nome"
+              onChange={escutaInput}
+            />
+          </Grid>
+          <Grid item>
+            <TextField
+              id="livro"
+              label="Livro"
+              variant="outlined"
+              value={livro}
+              name="livro"
+              onChange={escutaInput}
+            />
+          </Grid>
+          <Grid item>
+            <TextField
+              id="preco"
+              label="Preço"
+              variant="outlined"
+              value={preco}
+              name="preco"
+              onChange={escutaInput}
+            />
+          </Grid>
+          <Grid item>
+            <Button
+              onClick={submitFormulario}
+              color="primary"
+              variant="outlined"
+            >
+              Salvar
+            </Button>
+          </Grid>
+        </Grid>
+      </form>
+    </>
   );
 }

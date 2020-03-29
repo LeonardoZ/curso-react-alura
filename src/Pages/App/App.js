@@ -1,58 +1,117 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
+import PaginaBasica from "../PaginaBasica/PaginaBasica";
 import Tabela from "../../Components/Tabela/Tabela";
 import Form from "../../Components/Formulario/Formulario";
-import Header from "../../Components/Header/Header";
-import PopUp from "../../Utils/PopUp";
-import "materialize-css/dist/css/materialize.min.css";
-import "./App.css";
+import Toast from "../../Components/Toast/Toast";
 import ApiService from "../../Data/ApiService";
 
 function App() {
-  const [autores, setAutores] = useState([]);
+  const [estado, setEstado] = useState({
+    autores: [],
+    toast: {
+      open: false,
+      texto: "",
+      tipo: "success"
+    }
+  });
 
   useEffect(() => {
     ApiService.ListaAutores()
-      .then((res) => setAutores(res.data))
-      .catch((err) =>
-        PopUp.exibeMensagem("error", "Falha ao carregar autores")
+      .then(res => setEstado({...estado, autores: res.data}))
+      .catch(_ =>
+        setEstado({
+          ...estado,
+          toast: {
+            open: true,
+            tipo: "error",
+            texto: "Falha ao carregar autores"
+          }
+        })
       );
   }, []);
 
-  const removerAutor = (id) => {
-    const autoresAtualizados = autores.filter((autor) => autor.id !== id);
+  const removerAutor = id => {
+    const autoresAtualizados = estado.autores.filter(autor => autor.id !== id);
 
     ApiService.RemoveAutor(id)
-      .then((res) => {
+      .then(res => {
         if (res.message === "deleted") {
-          setAutores(autoresAtualizados);
-          PopUp.exibeMensagem("success", "Autor removido");
+          setEstado({
+            toast: {
+              open: true,
+              tipo: "success",
+              texto: "Autor removido"
+            },
+            autores: autoresAtualizados
+          });
         }
       })
-      .catch((err) => PopUp.exibeMensagem("error", "Falha ao remover Autor"));
+      .catch(_ =>
+        setEstado({
+          ...estado.autores,
+          toast: { open: true, tipo: "error", texto: "Falha ao remover Autor" }
+        })
+      );
   };
 
-  const escutaSubmit = (autor) => {
+  const escutaSubmit = dados => {
+    const autor = {
+      nome: dados.nome,
+      livro: dados.livro,
+      preco: dados.preco
+    };
     ApiService.CriaAutor(JSON.stringify(autor))
-      .then(ApiService.TrataErros)
-      .then((res) => {
+      .then(res => {
         if (!res.mensagem === "success") {
           return;
         }
-        setAutores([...autores, autor]);
-        PopUp.exibeMensagem("success", "Autor adicionado");
+        const novoAutor = res.data;
+        setEstado({
+          autores: [...estado.autores, novoAutor],
+          toast: {
+            open: true,
+            tipo: "success",
+            texto: "Autor adicionado com sucesso"
+          }
+        });
       })
-      .catch((err) => PopUp.exibeMensagem("error", "Falha ao adicionar autor"));
+      .catch(_ =>
+        setEstado({
+          ...estado.autores,
+          toast: {
+            open: true,
+            tipo: "error",
+            texto: "Falha ao adicionar Autor"
+          }
+        })
+      );
   };
-
+  const campos = [
+    { titulo: "Autor", campo: "nome" },
+    { titulo: "Livro", campo: "livro" },
+    { titulo: "Preço", campo: "preco" }
+  ];
   return (
-    <Fragment>
-      <Header />
-      <div className="container mb-10">
-        <Tabela autores={autores} removerAutor={removerAutor} />
-        <Form escutaSubmit={escutaSubmit} />
-      </div>
-    </Fragment>
+    <PaginaBasica titulo="Casa do Código">
+      <Toast
+        handleClose={() =>
+          setEstado({
+            ...estado,
+            toast: {
+              open: false,
+            }
+          })
+        }
+        open={estado.toast.open}
+        severity={estado.toast.tipo}
+      >
+        {estado.toast.texto}
+      </Toast>
+
+      <Form escutaSubmit={escutaSubmit} />
+      <Tabela dados={estado.autores} removeDado={removerAutor} campos={campos} />
+    </PaginaBasica>
   );
 }
 

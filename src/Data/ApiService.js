@@ -1,42 +1,26 @@
+const urlBase = "http://localhost:8000/api/autor";
+const consomeApi = (recurso = "", method = "GET", body) => {
+  return fetch(`${urlBase}/${recurso}`, {
+    method,
+    headers: { "content-type": "application/json" },
+    body
+  })
+   .then(ApiService.TrataErros)
+   .then(res => res.json())
+};
+
 const ApiService = {
-  ListaAutores: () => {
-    return fetch("http://localhost:8000/api/autor")
-      .then(ApiService.TrataErros)
-      .then((res) => res.json());
-  },
-  CriaAutor: (autor) => {
-    return fetch("http://localhost:8000/api/autor", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: autor,
-    })
-      .then(ApiService.TrataErros)
-      .then((res) => res.json());
-  },
-  ListaNomes: () => {
-    return fetch("http://localhost:8000/api/autor/nome")
-      .then(ApiService.TrataErros)
-      .then((res) => res.json());
-  },
-  ListaLivros: () => {
-    return fetch("http://localhost:8000/api/autor/livro")
-      .then(ApiService.TrataErros)
-      .then((res) => res.json());
-  },
-  RemoveAutor: (id) => {
-    return fetch(`http://localhost:8000/api/autor/${id}`, {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-    })
-      .then(ApiService.TrataErros)
-      .then((res) => res.json());
-  },
-  TrataErros: (res) => {
+  ListaAutores: () => consomeApi(),
+  CriaAutor: autor => consomeApi("", "POST", autor),
+  ListaNomes: () => consomeApi("nome"),
+  ListaLivros: () => consomeApi("livro"),
+  RemoveAutor: id => consomeApi(id, "DELETE"),
+  TrataErros: res => {
     if (!res.ok) {
       throw new Error(res.responseText);
     }
     return res;
-  },
+  }
 };
 
 export default ApiService;

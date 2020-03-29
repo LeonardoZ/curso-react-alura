@@ -1,24 +1,55 @@
-import React, { useState, useEffect, Fragment } from "react";
-import Header from "../../Components/Header/Header";
-import DataTable from "../../Components/DataTable/DataTable";
-import PopUp from "../../Utils/PopUp";
+import React, { useState, useEffect } from "react";
+import PaginaBasica from "../PaginaBasica/PaginaBasica";
+import Tabela from "../../Components/Tabela/Tabela";
 import ApiService from "../../Data/ApiService";
+import Toast from "../../Components/Toast/Toast";
 
 export default function Livros() {
-  const [livros, setLivros] = useState([]);
+  const [{ livros, toast }, setEstado] = useState({
+    livros: [],
+    toast: { open: false }
+  });
 
   useEffect(() => {
     ApiService.ListaLivros()
-      .then((res) => setLivros(res.data))
-      .catch((err) => PopUp.exibeMensagem("error", "Falha ao carregar livros"));
+      .then(res => setEstado({ toast: { open: false }, livros: res.data }))
+      .catch(_ =>
+        setEstado({
+          ...livros,
+          toast: {
+            open: true,
+            tipo: "error",
+            texto: "Falha ao carregar livros"
+          }
+        })
+      )
   }, []);
+
+  const campos = [
+    {
+      titulo: "Livros",
+      campo: "livro"
+    }
+  ];
+
   return (
-    <Fragment>
-      <Header />
-      <div className="container">
-        <h1>Livros</h1>
-        <DataTable dados={livros} coluna={"livro"} titulo="Livros" />
-      </div>
-    </Fragment>
+    <PaginaBasica titulo="Livros">
+      <Toast
+        handleClose={() =>
+          setEstado({
+            livros,
+            toast: {
+              open: false
+            }
+          })
+        }
+        open={toast.open}
+        severity={toast.tipo}
+      >
+        {toast.texto}
+      </Toast>
+
+      <Tabela dados={livros} campos={campos} />
+    </PaginaBasica>
   );
 }

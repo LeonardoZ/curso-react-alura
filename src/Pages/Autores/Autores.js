@@ -1,27 +1,55 @@
-import React, { useState, useEffect, Fragment } from "react";
-import Header from "../../Components/Header/Header";
-import DataTable from "../../Components/DataTable/DataTable";
-import PopUp from "../../Utils/PopUp";
+import React, { useState, useEffect } from "react";
+import PaginaBasica from "../PaginaBasica/PaginaBasica";
+import Tabela from "../../Components/Tabela/Tabela";
 import ApiService from "../../Data/ApiService";
+import Toast from "../../Components/Toast/Toast";
 
 export default function Autores() {
-  const [autores, setAutores] = useState([]);
+  const [{ autores, toast }, setEstado] = useState({
+    autores: [],
+    toast: { open: false }
+  });
 
   useEffect(() => {
-    ApiService.ListaNomes()
-      .then((res) => setAutores(res.data))
-      .catch((err) =>
-        PopUp.exibeMensagem("error", "Falha ao carregar autores")
-      );
+    ApiService.ListaAutores()
+      .then(res => setEstado({ toast: { open: false }, autores: res.data }))
+      .catch(_ =>
+        setEstado({
+          ...autores,
+          toast: {
+            open: true,
+            tipo: "error",
+            texto: "Falha ao carregar autores"
+          }
+        })
+      )
   }, []);
 
+  const campos = [
+    {
+      titulo: "Autores",
+      campo: "nome"
+    }
+  ];
+
   return (
-    <Fragment>
-      <Header />
-      <div className="container">
-        <h1>Autores</h1>
-        <DataTable dados={autores} coluna={"nome"} titulo="Autores" />
-      </div>
-    </Fragment>
+    <PaginaBasica titulo="Autores">
+      <Toast
+        handleClose={() =>
+          setEstado({
+            autores,
+            toast: {
+              open: false
+            }
+          })
+        }
+        open={toast.open}
+        severity={toast.tipo}
+      >
+        {toast.texto}
+      </Toast>
+
+      <Tabela dados={autores} campos={campos} />
+    </PaginaBasica>
   );
 }

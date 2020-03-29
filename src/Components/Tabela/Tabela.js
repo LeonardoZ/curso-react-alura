@@ -1,48 +1,57 @@
 import React, { Component } from "react";
-import CoolButton from "../CoolButton/CoolButton";
+import Table from "@material-ui/core/Table";
+import TableBody from "@material-ui/core/TableBody";
+import TableCell from "@material-ui/core/TableCell";
+import TableHead from "@material-ui/core/TableHead";
+import TableRow from "@material-ui/core/TableRow";
+import Button from "@material-ui/core/Button";
 
-export default class Tabela extends Component {
-  render() {
-    let { autores, removerAutor } = this.props;
-
-    return (
-      <table className="centered highlight">
-        <THead />
-        <TBody autores={autores} removerAutor={removerAutor} />
-      </table>
-    );
-  }
-}
-
-const THead = () => {
-  return (
-    <thead>
-      <tr>
-        <th>Autor</th>
-        <th>Livro</th>
-        <th>Preços</th>
-        <th>Remover</th>
-      </tr>
-    </thead>
+const CelulaDeleta = ({ id, removeDado }) => {
+  return removeDado ? (
+    <TableCell key={id}>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={() => removeDado(id)}
+      >
+        Remover
+      </Button>
+    </TableCell>
+  ) : (
+    <></>
   );
 };
 
-const TBody = ({ autores, removerAutor }) => {
+const TituloDeleta = ({ removeDado }) => {
+  return removeDado ? <TableCell>Remover</TableCell> : 
+  <></>;
+};
+
+export default props => {
+  let { campos, dados, removeDado } = props;
+
   return (
-    <tbody>
-      {autores &&
-        autores.map((autor, index) => (
-          <tr key={autor.id}>
-            <td>{autor.nome}</td>
-            <td>{autor.livro}</td>
-            <td>{autor.preco}</td>
-            <td>
-              <CoolButton primary onClick={() => removerAutor(autor.id)}>
-                Remover
-              </CoolButton>
-            </td>
-          </tr>
-        ))}
-    </tbody>
+    <Table>
+      <TableHead>
+        <TableRow>
+          {campos &&
+            campos.map((campo, index) => (
+              <TableCell key={index}>{campo.titulo}</TableCell>
+            ))}
+          <TituloDeleta removeDado={removeDado} />
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {dados &&
+          dados.map((dado, index) => (
+            <TableRow key={index}>
+              {campos.map((campo, index) => (
+                <TableCell key={index}>{dado[campo.campo]}</TableCell>
+              ))}
+              <CelulaDeleta id={dado.id} removeDado={removeDado} />
+            </TableRow>
+          ))}
+      </TableBody>
+    </Table>
   );
 };
